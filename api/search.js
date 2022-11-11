@@ -14,15 +14,10 @@ export default async (req, res) => {
             }
         }).then(response => response.json())
         .then(data => {
-            if (data.status == 404) {
-                res.status(404).json({
-                    error: "Package not found"
-                })
+            if (data.message == 'Not Found') {
+                return false
             } else {
-                res.status(200).json({
-                    name: data.name,
-                    version: data.version,
-                })
+                return true
             }
         })
 
