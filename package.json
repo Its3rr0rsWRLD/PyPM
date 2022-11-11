@@ -1,0 +1,9 @@
+{
+  "name": "pyos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "octokit/rest": "^16.28.1"
+  }
+}
