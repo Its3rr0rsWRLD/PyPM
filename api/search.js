@@ -13,19 +13,14 @@ export default async (req, res) => {
             }
         }).then(data => {
             if (data.status == 404) {
-                return false
+                res.status(404).json({
+                    error: 'Package not found'
+                })
             } else {
-                return true
             }
         })
 
     }
 
-    getPackage().then(data => {
-        if (data == false) {
-            res.status(404).send(`Package '${name}' not found.`);
-        } else {
-            res.status(200).send(`Package '${name}' found.`);
-        }
-    });
+    getPackage()
 };
