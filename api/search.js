@@ -7,14 +7,13 @@ export default async (req, res) => {
 
 
     function getPackage() {
-        fetch('https://api.github.com/repos/ThatError404/PyPM/contents/api/pkgs/' + name + '.json', {
+        fetch('https://api.github.com/repos/ThatError404/PyPM/contents/api/pkgs/' + name + '/package.json', {
             method: 'GET',
             headers: {
                 'Authorization': 'token ' + auth
             }
-        }).then(response => response.json())
-        .then(data => {
-            if (data.message == 'Not Found') {
+        }).then(data => {
+            if (data.status == 404) {
                 return false
             } else {
                 return true
