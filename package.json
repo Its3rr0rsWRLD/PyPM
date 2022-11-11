@@ -4,6 +4,6 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "octokit/rest": "^16.28.1"
+    "@octokit/rest": "^16.28.1"
   }
 }
