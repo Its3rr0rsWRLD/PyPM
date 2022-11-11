@@ -1,15 +1,19 @@
 export default async (req, res) => {
     const name = req.query.name;
 
-    const rest = require('@octokit/rest');
+    const fetch = require('node-fetch');
 
-    const octokit = new rest.Octokit({
-        auth: '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',
-    });
+    let auth = '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'
 
 
     function getPackage() {
-        octokit.request(`GET /repos/{ThatError404/PyPM/api/pkgs/${name}}`).then(({ data }) => {
+        fetch('https://api.github.com/repos/ThatError404/PyPM/contents/api/pkgs/' + name + '.json', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'token ' + auth
+            }
+        }).then(response => response.json())
+        .then(data => {
             if (data.status == 404) {
                 res.status(404).json({
                     error: "Package not found"
