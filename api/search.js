@@ -9,15 +9,16 @@ export default async (req, res) => {
 
 
     function getPackage() {
-        octokit.repos.getContent({
-            owner: 'ThatError404',
-            repo: 'PyPM',
-            path: `api/pkgs/${name}/package.json`
-        }).then(({ data }) => {
-            if (data.status === 404) {
-                return false
+        octokit.request(`GET /repos/{ThatError404/PyPM/api/pkgs/${name}}`).then(({ data }) => {
+            if (data.status == 404) {
+                res.status(404).json({
+                    error: "Package not found"
+                })
             } else {
-                return true
+                res.status(200).json({
+                    name: data.name,
+                    version: data.version,
+                })
             }
         })
 
