@@ -1,2 +1,0 @@
-# PyPM
-PyOS Package Manager
