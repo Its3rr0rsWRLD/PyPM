@@ -1,5 +1,5 @@
 export default async (req, res) => {
-    const name = req.body.name;
+    const name = req.query.name;
 
     function getPackage() {
     }
