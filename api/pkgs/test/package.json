@@ -1,5 +1,7 @@
 {
   'name': 'test',
   'author': 'ThatError404',
-  'main': 'main.py'
+  'main': 'main.py',
+  'dependancies': {
+  }
 }
