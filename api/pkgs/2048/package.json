@@ -3,8 +3,8 @@
   'author': 'ThatError404',
   'main': '2048.py',
   'dependencies': {
-    'copy',
+    'tkinter',
     'random',
-    'colorama'
+    'colors'
   }
 }
