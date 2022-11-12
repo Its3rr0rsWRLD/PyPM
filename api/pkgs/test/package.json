@@ -2,6 +2,6 @@
   'name': 'test',
   'author': 'ThatError404',
   'main': 'main.py',
-  'dependancies': {
+  'dependencies': {
   }
 }
