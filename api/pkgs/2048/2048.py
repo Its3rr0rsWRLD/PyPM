@@ -1,141 +1,256 @@
-import copy
+import tkinter as tk
 import random
-from colorama import Fore, Back
+import colors as c
 
-def reduceLineLeft(xs): 
-    def aux(acc, y):
-        if len(acc) == 0: acc.append(y)
-        elif acc[len(acc)-1] == y:
-            acc[len(acc)-1] = y * 2
-            acc.append(0)
-        else: acc.append(y)
-        return acc
-    res = filter(lambda x: x!=0, reduce(aux, filter(lambda x: x!=0, xs), []))
-    res.extend([0 for i in range(0, len(xs)-len(res))])
-    return res
 
-def reduceLineRight(xs):
-    return reduceLineLeft(xs[::-1])[::-1]
+class Game(tk.Frame):
+    def __init__(self):
+        tk.Frame.__init__(self)
+        self.grid()
+        self.master.title('2048')
 
-def reduceLeft(a):
-    return map(reduceLineLeft, a)
+        self.main_grid = tk.Frame(
+            self, bg=c.GRID_COLOR, bd=3, width=400, height=400)
+        self.main_grid.grid(pady=(100, 0))
 
-def reduceRight(a):
-    return map(reduceLineRight, a)
+        self.make_GUI()
+        self.start_game()
 
-def reduceUp(a):
-    return rotate(reduceLeft(rotate(a)))
+        self.master.bind("<Left>", self.left)
+        self.master.bind("<Right>", self.right)
+        self.master.bind("<Up>", self.up)
+        self.master.bind("<Down>", self.down)
 
-def reduceDown(a):
-    return rotate(reduceRight(rotate(a)))
+        self.mainloop()
 
-def rotate(a):
-    def auxset(i, j): b[j][i] = a[i][j]
-    b = newEmpty(len(a))
-    map(lambda i: map(lambda j: auxset(i, j), range(0, len(a[i]))), range(0, len(a)))
-    return b
 
-def prettyPrint(a):
-    def color(x):
-        if x == 0:    return Fore.RESET + Back.RESET
-        if x == 2:    return Fore.RED + Back.RESET
-        if x == 4:    return Fore.GREEN + Back.RESET
-        if x == 8:    return Fore.YELLOW + Back.RESET
-        if x == 16:   return Fore.BLUE + Back.RESET
-        if x == 32:   return Fore.MAGENTA + Back.RESET
-        if x == 64:   return Fore.CYAN + Back.RESET
-        if x == 128:  return Fore.RED + Back.BLACK
-        if x == 256:  return Fore.GREEN + Back.BLACK
-        if x == 512:  return Fore.YELLOW + Back.BLACK
-        if x == 1024: return Fore.BLUE + Back.BLACK
-        if x == 2048: return Fore.MAGENTA + Back.BLACK
-        if x == 4096: return Fore.CYAN + Back.BLACK
-        if x == 8192: return Fore.WHITE + Back.BLACK
-    for i in a:
-        for j in i:
-            print color(j) + ("%4d" % j) + Fore.RESET + Back.RESET,
-        print
+    def make_GUI(self):
+        # make grid
+        self.cells = []
+        for i in range(4):
+            row = []
+            for j in range(4):
+                cell_frame = tk.Frame(
+                    self.main_grid,
+                    bg=c.EMPTY_CELL_COLOR,
+                    width=100,
+                    height=100)
+                cell_frame.grid(row=i, column=j, padx=5, pady=5)
+                cell_number = tk.Label(self.main_grid, bg=c.EMPTY_CELL_COLOR)
+                cell_number.grid(row=i, column=j)
+                cell_data = {"frame": cell_frame, "number": cell_number}
+                row.append(cell_data)
+            self.cells.append(row)
 
-def newEmpty(size):
-    return [[0 for i in range(0, size)] for i in range(0, size)]
+        # make score header
+        score_frame = tk.Frame(self)
+        score_frame.place(relx=0.5, y=40, anchor="center")
+        tk.Label(
+            score_frame,
+            text="Score",
+            font=c.SCORE_LABEL_FONT).grid(row=0)
 
-def isWin(a):
-    return traverse(a, lambda x: x == 2048)
+        self.score_label = tk.Label(score_frame, text="0", font=c.SCORE_FONT)
+        self.score_label.grid(row=1)
 
-def isFail(a):
-    def aux(a):
-        for i in a:
-            for j in zip(i, i[1:]):
-                if j[0] == 0 or j[1] == 0 or j[0] == j[1]: return False
-        return True
-    return aux(a) and aux(rotate(a))
-    
-def traverse(a, f):
-    for line in a:
-        for ele in line:
-            if f(ele): return True
-    return False
 
-def randomPoint(size):
-    x = random.randint(0, size)
-    y = random.randint(0, size)
-    return (x, y)
+    def start_game(self):
+        # create matrix of zeroes
+        self.matrix = [[0] * 4 for _ in range(4)]
 
-def randomInit(a):
-    seed = [2, 2, 2, 4]
-    x, y = randomPoint(len(a)-1)
-    v = random.randint(0, len(seed)-1)
-    a[x][y] = seed[v]
+        # fill 2 random cells with 2s
+        row = random.randint(0, 3)
+        col = random.randint(0, 3)
 
-def randomNum(a):
-    seed = [2, 2, 2, 4]
-    x, y = randomPoint(len(a)-1)
-    if a[x][y] == 0:
-        v = random.randint(0, len(seed)-1)
-        a[x][y] = seed[v]
-    else: randomNum(a)
+        self.matrix[row][col] = 2
+        self.cells[row][col]["frame"].configure(bg=c.CELL_COLORS[2])
+        self.cells[row][col]["number"].configure(
+            bg=c.CELL_COLORS[2],
+            fg=c.CELL_NUMBER_COLORS[2],
+            font=c.CELL_NUMBER_FONTS[2],
+            text="2"
+        )
 
-def newGame(size):
-    print "press w to move up, a to move left, s to move down, d to move right."
-    print "press q to quit."
-    won = False
-    a = newEmpty(size)
-    randomInit(a)
-    randomInit(a)
-    prettyPrint(a)
-    while True:
-        b = copy.deepcopy(a)
-        key = raw_input()
-        if key == "w":   a = reduceUp(a)
-        elif key == "a": a = reduceLeft(a)
-        elif key == "s": a = reduceDown(a)
-        elif key == "d": a = reduceRight(a)
-        elif key == "q": break
-        if a == b: 
-            print "no numbers to be reduce"
-        else: randomNum(a)
-        prettyPrint(a)
-        if isWin(a) and not won:
-            print "You win"
-            won = True
-        elif isFail(a):
-            print "You fail"
-            break
+        while(self.matrix[row][col] != 0):
+            row = random.randint(0, 3)
+            col = random.randint(0, 3)
 
-def test():
-    assert reduceLineLeft([4, 4, 4, 4]) == [8, 8, 0, 0]
-    assert reduceLineLeft([0, 0, 0, 0]) == [0, 0, 0, 0]
-    assert reduceLineLeft([2, 0, 2, 0]) == [4, 0, 0, 0]
-    assert reduceLineLeft([2, 0, 0, 2]) == [4, 0, 0, 0]
-    assert reduceLineLeft([2, 2, 0, 2]) == [4, 2, 0, 0]
-    assert reduceLineLeft([4, 0, 2, 2]) == [4, 4, 0, 0]
-    assert reduceLineLeft([2, 0, 2, 2]) == [4, 2, 0, 0]
-    assert reduceLineLeft([2, 2, 8, 8]) == [4, 16, 0, 0]
-    assert reduceLineRight([2, 2, 0, 2]) == [0, 0, 2, 4]
-    assert reduceLineRight([0, 0, 0, 2]) == [0, 0, 0, 2]
-    assert reduceLineRight([2, 0, 0, 2]) == [0, 0, 0, 4]
-    assert reduceLineRight([4, 4, 2, 2]) == [0, 0, 8, 4]
-    assert reduceLineRight([2, 4, 4, 2]) == [0, 2, 8, 2]
-    
+        self.matrix[row][col] = 2
+        self.cells[row][col]["frame"].configure(bg=c.CELL_COLORS[2])
+        self.cells[row][col]["number"].configure(
+            bg=c.CELL_COLORS[2],
+            fg=c.CELL_NUMBER_COLORS[2],
+            font=c.CELL_NUMBER_FONTS[2],
+            text="2"
+        )
+
+        self.score = 0
+
+
+    # Matrix Manipulation Functions
+
+    def stack(self):
+        new_matrix = [[0] * 4 for _ in range(4)]
+        for i in range(4):
+            fill_position = 0
+            for j in range(4):
+                if self.matrix[i][j] != 0:
+                    new_matrix[i][fill_position] = self.matrix[i][j]
+                    fill_position += 1
+        self.matrix = new_matrix
+
+
+    def combine(self):
+        for i in range(4):
+            for j in range(3):
+                if self.matrix[i][j] != 0 and self.matrix[i][j] == self.matrix[i][j + 1]:
+                    self.matrix[i][j] *= 2
+                    self.matrix[i][j + 1] = 0
+                    self.score += self.matrix[i][j]
+
+
+    def reverse(self):
+        new_matrix = []
+        for i in range(4):
+            new_matrix.append([])
+            for j in range(4):
+                new_matrix[i].append(self.matrix[i][3 - j])
+        self.matrix = new_matrix
+
+
+    def transpose(self):
+        new_matrix = [[0] * 4 for _ in range(4)]
+        for i in range(4):
+            for j in range(4):
+                new_matrix[i][j] = self.matrix[j][i]
+        self.matrix = new_matrix
+
+
+    # Add a new 2 or 4 tile randomly to an empty cell
+
+    def add_new_tile(self):
+        row = random.randint(0, 3)
+        col = random.randint(0, 3)
+        while(self.matrix[row][col] != 0):
+            row = random.randint(0, 3)
+            col = random.randint(0, 3)
+        self.matrix[row][col] = random.choice([2, 4])   # create new tile of 2 or 4 at any random row & col
+
+
+    # Update the GUI to match the matrix
+
+    def update_GUI(self):
+        for i in range(4):
+            for j in range(4):
+                cell_value = self.matrix[i][j]
+                if cell_value == 0:
+                    self.cells[i][j]["frame"].configure(bg=c.EMPTY_CELL_COLOR)      # give bgcolor to empty cell's frame
+                    self.cells[i][j]["number"].configure(               # give bgcolor to empty cell's number
+                        bg=c.EMPTY_CELL_COLOR, text="")
+                else:
+                    self.cells[i][j]["frame"].configure(            # give cell colour's value to filled cell's frame
+                        bg=c.CELL_COLORS[cell_value])
+
+                    self.cells[i][j]["number"].configure(
+                        bg=c.CELL_COLORS[cell_value],
+                        fg=c.CELL_NUMBER_COLORS[cell_value],
+                        font=c.CELL_NUMBER_FONTS[cell_value],
+                        text=str(cell_value))
+        self.score_label.configure(text=self.score)
+        self.update_idletasks()
+
+
+    # Arrow-Press Functions
+
+    def left(self, event):
+        self.stack()
+        self.combine()
+        self.stack()
+        self.add_new_tile()
+        self.update_GUI()
+        self.game_over()
+
+
+    def right(self, event):
+        self.reverse()
+        self.stack()
+        self.combine()
+        self.stack()
+        self.reverse()
+        self.add_new_tile()
+        self.update_GUI()
+        self.game_over()
+
+
+    def up(self, event):
+        self.transpose()
+        self.stack()
+        self.combine()
+        self.stack()
+        self.transpose()
+        self.add_new_tile()
+        self.update_GUI()
+        self.game_over()
+
+
+    def down(self, event):
+        self.transpose()
+        self.reverse()
+        self.stack()
+        self.combine()
+        self.stack()
+        self.reverse()
+        self.transpose()
+        self.add_new_tile()
+        self.update_GUI()
+        self.game_over()
+
+
+    # Check if any moves are possible
+
+    def horizontal_move_exists(self):
+        for i in range(4):
+            for j in range(3):
+                if self.matrix[i][j] == self.matrix[i][j + 1]:
+                    return True
+        return False
+
+
+    def vertical_move_exists(self):
+        for i in range(3):
+            for j in range(4):
+                if self.matrix[i][j] == self.matrix[i + 1][j]:
+                    return True
+        return False
+
+
+    # Check if Game is Over (Win/Lose)
+
+    def game_over(self):
+        if any(2048 in row for row in self.matrix):
+            game_over_frame = tk.Frame(self.main_grid, borderwidth=2)
+            game_over_frame.place(relx=0.5, rely=0.5, anchor="center")
+            tk.Label(
+                game_over_frame,
+                text="You win!",
+                bg=c.WINNER_BG,
+                fg=c.GAME_OVER_FONT_COLOR,
+                font=c.GAME_OVER_FONT).pack()
+        elif not any(0 in row for row in self.matrix) and not self.horizontal_move_exists()\
+          and not self.vertical_move_exists():
+            game_over_frame = tk.Frame(self.main_grid, borderwidth=2)
+            game_over_frame.place(relx=0.5, rely=0.5, anchor="center")
+            tk.Label(
+                game_over_frame,
+                text="Game over!",
+                bg=c.LOSER_BG,
+                fg=c.GAME_OVER_FONT_COLOR,
+                font=c.GAME_OVER_FONT).pack()
+
+
+def main():
+    Game()
+
+
 if __name__ == "__main__":
-    newGame(4)
+    main()
