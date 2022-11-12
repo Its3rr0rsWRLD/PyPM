@@ -1,0 +1,10 @@
+{
+  'name': '2048',
+  'author': 'ThatError404',
+  'main': '2048.py',
+  'dependencies': {
+    'copy',
+    'random',
+    'colorama'
+  }
+}
